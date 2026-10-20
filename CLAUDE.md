@@ -15,6 +15,9 @@ Vi står på en IT-talentmesse. En besøgende foreslår et lille værktøj, og d
 ## Hvis idéen er for stor
 Byg den mindste version, der viser kernen, på under 10 minutter. Sig det i én sætning.
 
+## Hvis nogen vil videreudvikle et eksisterende værktøj
+Ret filen i featurens egen mappe, flyt featuren øverst i `features.json`, og tilføj den nye persons navn til `foreslaaet_af` med " + " (fx `"Ferm (eksempel) + Test"`). Opdater `tid` med `date +%H:%M`.
+
 ## Data
 - `data/fjernvarme-maalere.csv`: 12 målere, timeværdier en uge. Kolonner: maaler_id; bygningstype; tidspunkt; forbrug_kwh; fremloeb_c; retur_c. To målere har dårlig afkøling (lav forskel mellem frem- og returløb).
 - `data/vand-natforbrug.csv`: 5 forsyningszoner, 30 døgn. Kolonner: zone; dato; natforbrug_m3_t; tryk_bar; antal_maalere. Én zone får en lækage undervejs.
