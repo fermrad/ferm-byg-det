@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hvem afkøler dårligt?</title>
+<link rel="stylesheet" href="../../assets/ferm.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">Alle værktøjer</a>
+  <h1>Hvem afkøler dårligt?</h1>
+  <p class="muted">Lav forskel mellem frem- og returløb betyder, at vandet ikke afgiver nok varme hos kunden. Det koster i varmetab og pumpeenergi.</p>
+  <div class="grid" id="kpi" style="margin:20px 0"></div>
+  <div class="card"><h2>Gennemsnitlig afkøling pr. måler</h2><canvas id="c" height="120"></canvas></div>
+  <p class="muted" style="font-size:14px;margin-top:14px">Fiktive data. Grænse for god afkøling: 30 °C.</p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(async()=>{
+  const txt=await (await fetch("../../data/fjernvarme-maalere.csv")).text();
+  const [h,...rows]=txt.trim().split("\n").map(l=>l.split(";"));
+  const by={};
+  rows.forEach(r=>{const id=r[0];(by[id]??={n:0,dt:0,kwh:0,type:r[1]});by[id].n++;by[id].dt+=(+r[4])-(+r[5]);by[id].kwh+=+r[3];});
+  const list=Object.entries(by).map(([id,v])=>({id,type:v.type,dt:v.dt/v.n,kwh:v.kwh})).sort((a,b)=>a.dt-b.dt);
+  const bad=list.filter(x=>x.dt<30);
+  const avg=list.reduce((s,x)=>s+x.dt,0)/list.length;
+  document.getElementById("kpi").innerHTML=`
+    <div class="card kpi"><b>${list.length}</b><span>målere analyseret</span></div>
+    <div class="card kpi"><b class="bad">${bad.length}</b><span>med for lav afkøling</span></div>
+    <div class="card kpi"><b>${avg.toFixed(1)} °C</b><span>gennemsnitlig afkøling</span></div>`;
+  const css=getComputedStyle(document.documentElement);
+  new Chart(document.getElementById("c"),{type:"bar",
+    data:{labels:list.map(x=>x.id+" · "+x.type),datasets:[{data:list.map(x=>+x.dt.toFixed(1)),
+      backgroundColor:list.map(x=>x.dt<30?css.getPropertyValue("--supply"):css.getPropertyValue("--return"))}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:"°C"}}}}});
+})();
+</script>
+</body>
+</html>
