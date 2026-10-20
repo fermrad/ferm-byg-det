@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hvor er lækagen?</title>
+<link rel="stylesheet" href="../../assets/ferm.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">Alle værktøjer</a>
+  <h1>Hvor er lækagen?</h1>
+  <p class="muted">Natforbruget (kl. 02–04) skal være roligt. Et pludseligt og vedvarende hop tyder på et brud på ledningen.</p>
+  <div class="grid" id="kpi" style="margin:20px 0"></div>
+  <div class="card"><h2>Natforbrug pr. zone</h2><canvas id="c" height="140"></canvas></div>
+  <p class="muted" style="font-size:14px;margin-top:14px">Fiktive data. Metode: baseline = første 14 døgn. En zone markeres, hvis mindst 5 på hinanden følgende døgn ligger &gt; baseline + 3·σ.</p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<script>
+Chart.register(window["chartjs-plugin-annotation"]);
+(async()=>{
+  const txt=await (await fetch("../../data/vand-natforbrug.csv")).text();
+  const [,...rows]=txt.trim().split("\n").map(l=>l.split(";"));
+  const byZone={};
+  rows.forEach(r=>{(byZone[r[0]]??=[]).push({dato:r[1],v:+r[2]})});
+  Object.values(byZone).forEach(a=>a.sort((x,y)=>x.dato.localeCompare(y.dato)));
+  const datoer=byZone[Object.keys(byZone)[0]].map(x=>x.dato);
+
+  let laek=null;
+  for(const [zone,arr] of Object.entries(byZone)){
+    const base=arr.slice(0,14).map(x=>x.v);
+    const m=base.reduce((s,x)=>s+x,0)/base.length;
+    const sd=Math.sqrt(base.reduce((s,x)=>s+(x-m)**2,0)/base.length);
+    const graense=m+3*sd;
+    let run=0, start=null;
+    for(const d of arr){
+      if(d.v>graense){ if(run===0) start=d.dato; run++; if(run>=5){ laek={zone,start,m,graense}; break; } }
+      else { run=0; start=null; }
+    }
+    if(laek) break;
+  }
+
+  const css=getComputedStyle(document.documentElement);
+  const palette=[css.getPropertyValue("--return"),css.getPropertyValue("--ok"),css.getPropertyValue("--muted"),css.getPropertyValue("--ink"),css.getPropertyValue("--supply")];
+  const zoner=Object.keys(byZone);
+
+  const nuVal = laek ? byZone[laek.zone].at(-1).v : null;
+  const stigning = laek ? ((nuVal-laek.m)/laek.m*100) : null;
+  document.getElementById("kpi").innerHTML = laek ? `
+    <div class="card kpi"><b class="bad">${laek.zone}</b><span>zone med lækage</span></div>
+    <div class="card kpi"><b>${laek.start}</b><span>startede</span></div>
+    <div class="card kpi"><b class="bad">+${stigning.toFixed(0)} %</b><span>over baseline (${laek.m.toFixed(2)} m³/t)</span></div>`
+    : `<div class="card kpi"><b class="ok">Ingen</b><span>unormal stigning fundet</span></div>`;
+
+  const datasets = zoner.map((z,i)=>({
+    label:z,
+    data:byZone[z].map(x=>x.v),
+    borderColor: laek && z===laek.zone ? css.getPropertyValue("--supply") : palette[i%palette.length],
+    backgroundColor:"transparent",
+    borderWidth: laek && z===laek.zone ? 3 : 1.5,
+    tension:.25,
+    pointRadius:0
+  }));
+
+  const annotation = laek ? {
+    type:"line", xMin:laek.start, xMax:laek.start,
+    borderColor:css.getPropertyValue("--supply"), borderWidth:2, borderDash:[6,4],
+    label:{display:true,content:"Lækage "+laek.start,position:"start",backgroundColor:css.getPropertyValue("--supply"),color:"#fff",font:{weight:"700"}}
+  } : null;
+
+  new Chart(document.getElementById("c"),{
+    type:"line",
+    data:{labels:datoer,datasets},
+    options:{
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"bottom"},
+        annotation: annotation ? {annotations:{laek:annotation}} : {}},
+      scales:{y:{title:{display:true,text:"m³/t om natten"},beginAtZero:true},x:{ticks:{maxTicksLimit:10}}}
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,12 @@
 [
   {
+    "slug": "laekage",
+    "titel": "Hvor er lækagen?",
+    "beskrivelse": "Finder zonen hvor natforbruget pludselig stiger — og hvornår det startede.",
+    "foreslaaet_af": "Test",
+    "tid": "10:20"
+  },
+  {
     "slug": "varmetab",
     "titel": "Hvem afkøler dårligt?",
     "beskrivelse": "Finder fjernvarmemålere med lav forskel mellem frem- og returløb.",
