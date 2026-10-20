@@ -8,7 +8,7 @@ Vi står på en IT-talentmesse. En besøgende foreslår et lille værktøj, og d
 - Data: brug filerne i `data/` (fiktive, semikolon-separeret CSV) via `fetch('../../data/<fil>.csv')`. Opfind ikke nye data, hvis de eksisterende passer.
 - Biblioteker kun fra cdnjs.cloudflare.com, fx Chart.js. Pin versionen.
 - Al tekst på dansk. Kort og konkret.
-- Tilføj featuren øverst i `features.json`: `{ "slug", "titel", "beskrivelse", "foreslaaet_af", "tid" }` (tid = HH:MM).
+- Tilføj featuren øverst i `features.json`: `{ "slug", "titel", "beskrivelse", "foreslaaet_af", "tid" }`. `tid` skal altid hentes med `date +%H:%M` — gæt aldrig.
 - Når du er færdig: `git add -A && git commit -m "Ny feature: <titel>" && git push`. Spørg ikke om lov til commit/push i dette repo.
 - Hold svarene korte i terminalen. Publikum kigger med.
 
